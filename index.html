@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tavli - Plakoto</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+        
+        body {
+            background: #1a1a2e;
+            color: #eee;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #e94560;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .panel {
+            background: #16213e;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #0f3460;
+        }
+        
+        .panel h2 {
+            margin-top: 0;
+            color: #e94560;
+            border-bottom: 1px solid #0f3460;
+            padding-bottom: 10px;
+        }
+        
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #0f3460;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .game-header h2 {
+            margin: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        
+        .game-header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #0f3460;
+            border: 1px solid #e94560;
+            color: #eee;
+            border-radius: 5px;
+        }
+        
+        button {
+            background: #e94560;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #ff6b6b;
+        }
+        
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* Board Styles */
+        .board-and-controls {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        
+        .board-container {
+            background: #8B4513;
+            padding: 20px;
+            border-radius: 10px;
+            border: 5px solid #5D3A1A;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        
+        .board-text {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            white-space: pre;
+            background: #2d1f0f;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            display: inline-block;
+        }
+        
+        /* Side Controls */
+        .side-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .dice-section {
+            background: #16213e;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #0f3460;
+        }
+        
+        .turn-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .turn-buttons button {
+            width: 100%;
+        }
+        
+        .move-section {
+            background: #16213e;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #0f3460;
+        }
+        
+        .move-section h3 {
+            margin-top: 0;
+            color: #e94560;
+            border-bottom: 1px solid #0f3460;
+            padding-bottom: 10px;
+        }
+        
+        .move-input-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .move-input-vertical input {
+            width: 100%;
+        }
+        
+        .move-input-vertical button {
+            width: 100%;
+        }
+        
+        .player1-checker {
+            color: #ff6b6b;
+        }
+        
+        .player2-checker {
+            color: #4ecdc4;
+        }
+        
+        .pinned {
+            text-decoration: underline;
+        }
+        
+        /* Game Info */
+        .game-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .dice-display {
+            font-size: 24px;
+            text-align: center;
+            padding: 10px;
+            background: #0f3460;
+            border-radius: 5px;
+        }
+        
+        .dice {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            color: #000;
+            font-size: 24px;
+            line-height: 40px;
+            text-align: center;
+            margin: 0 5px;
+            border-radius: 5px;
+        }
+        
+        /* Move Input */
+        .move-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .move-input input {
+            width: 80px;
+        }
+        
+        /* Log */
+        .game-log {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #0f3460;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        
+        .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid #16213e;
+        }
+        
+        /* Games List */
+        .games-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .game-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #0f3460;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        
+        /* Status Messages */
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        .status.success {
+            background: #28a745;
+        }
+        
+        .status.error {
+            background: #dc3545;
+        }
+        
+        .status.info {
+            background: #17a2b8;
+        }
+        
+        /* Turn indicator */
+        .your-turn {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(233, 69, 96, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(233, 69, 96, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(233, 69, 96, 0); }
+        }
+        
+        /* Valid moves display */
+        .valid-moves {
+            background: #0f3460;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        
+        .valid-move {
+            display: inline-block;
+            background: #e94560;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        .valid-move:hover {
+            background: #ff6b6b;
+        }
+        
+        /* Rules */
+        .rules {
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        .rules h3 {
+            color: #e94560;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎲 Τάβλι - Πλακωτό 🎲</h1>
+        
+        <!-- Login Panel -->
+        <div id="login-panel" class="panel">
+            <h2>Σύνδεση / Εγγραφή</h2>
+            <p>Εισάγετε το όνομα χρήστη σας για να παίξετε (δεν απαιτείται κωδικός)</p>
+            <input type="text" id="username" placeholder="Εισάγετε όνομα χρήστη..." maxlength="50">
+            <button id="login-btn">Σύνδεση / Εγγραφή</button>
+            <div id="login-status"></div>
+        </div>
+        
+        <!-- Lobby Panel -->
+        <div id="lobby-panel" class="panel hidden">
+            <h2>Lobby</h2>
+            <p>Καλώς ήρθες, <span id="player-name"></span>!</p>
+            
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 300px;">
+                    <h3>Δημιουργία Νέου Παιχνιδιού</h3>
+                    <button id="create-game-btn">Δημιουργία Παιχνιδιού</button>
+                </div>
+                
+                <div style="flex: 1; min-width: 300px;">
+                    <h3>Διαθέσιμα Παιχνίδια</h3>
+                    <button id="refresh-games-btn">Ανανέωση</button>
+                    <div id="available-games" class="games-list"></div>
+                </div>
+                
+                <div style="flex: 1; min-width: 300px;">
+                    <h3>Τα Ενεργά σου Παιχνίδια</h3>
+                    <div id="my-games" class="games-list"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Panel -->
+        <div id="game-panel" class="panel hidden">
+            <div class="game-header">
+                <h2>Παιχνίδι #<span id="game-id-display"></span></h2>
+                <div class="game-header-buttons">
+                    <button id="back-to-lobby-btn">Πίσω στο lobby</button>
+                    <button id="refresh-game-btn">Ανανέωση Παιχνιδιού</button>
+                </div>
+            </div>
+            
+            <div class="game-info">
+                <div>
+                    <p><strong>Κατάσταση:</strong> <span id="game-status"></span></p>
+                    <p><strong>Τρέχουσα Σειρά:</strong> <span id="current-turn"></span></p>
+                    <p><strong>Είσαι ο:</strong> <span id="player-role"></span></p>
+                </div>
+            </div>
+            
+            <!-- Board and Controls Container -->
+            <div class="board-and-controls">
+                <!-- Board Display -->
+                <div class="board-container">
+                    <h3>Ταμπλό</h3>
+                    <div id="board-display" class="board-text"></div>
+                </div>
+                
+                <!-- Right Side Controls -->
+                <div class="side-controls">
+                    <!-- Dice Display -->
+                    <div class="dice-section">
+                        <div class="dice-display">
+                            <span id="dice-display">Ρίξε τα ζάρια!</span>
+                        </div>
+                        <p><strong>Κινήσεις που Απομένουν:</strong> <span id="moves-remaining"></span></p>
+                    </div>
+                    
+                    <!-- Turn Controls -->
+                    <div id="turn-controls" class="turn-buttons hidden">
+                        <button id="roll-dice-btn">🎲 Ρίξε Ζάρια</button>
+                        <button id="pass-turn-btn" disabled>Πάσο (Χωρίς Κινήσεις)</button>
+                    </div>
+                    
+                    <!-- Move Input -->
+                    <div id="move-controls" class="move-section hidden">
+                        <h3>Κάνε Κίνηση</h3>
+                        <div class="move-input-vertical">
+                            <div>
+                                <label>Από Θέση:</label>
+                                <input type="text" id="move-from" placeholder="1-24">
+                            </div>
+                            <div>
+                                <label>Προς Θέση:</label>
+                                <input type="text" id="move-to" placeholder="1-24 ή 0">
+                            </div>
+                            <button id="make-move-btn">Κάνε Κίνηση</button>
+                        </div>
+                        <p style="font-size: 12px; color: #aaa;">
+                            Ή κάνε κλικ σε μια έγκυρη κίνηση παρακάτω:
+                        </p>
+                        <div id="valid-moves-display" class="valid-moves"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Game Log -->
+            <div class="panel">
+                <h3>Ιστορικό Παιχνιδιού</h3>
+                <div id="game-log" class="game-log"></div>
+            </div>
+        </div>
+        
+        <!-- Rules Panel -->
+        <div class="panel rules">
+            <h3>Κανόνες Πλακωτού</h3>
+            <ul>
+                <li><strong>Αρχική Διάταξη:</strong> Κάθε παίκτης ξεκινά με 15 πούλια στην αρχική του θέση (θέση 1 για τον Παίκτη 1, θέση 24 για τον Παίκτη 2).</li>
+                <li><strong>Κίνηση:</strong> Ο Παίκτης 1 κινείται από τη θέση 1 προς τη 24· ο Παίκτης 2 κινείται από τη θέση 24 προς την 1.</li>
+                <li><strong>Πλάκωμα:</strong> Όταν πέσεις σε θέση με ακριβώς ένα αντίπαλο πούλι, το "πλακώνεις". Ένα πλακωμένο πούλι δεν μπορεί να κινηθεί μέχρι να φύγει αυτό που το πλακώνει.</li>
+                <li><strong>Μπλοκάρισμα:</strong> Δεν μπορείς να πέσεις σε θέση με 2 ή περισσότερα αντίπαλα πούλια.</li>
+                <li><strong>Μάζεμα:</strong> Μόλις όλα τα πούλια σου είναι στην μεριά του αντιπάλου (θέσεις 19-24 για τον Παίκτη 1, θέσεις 1-6 για τον Παίκτη 2), μπορείς να τα μαζέψεις.</li>
+                <li><strong>Νίκη:</strong> Ο πρώτος παίκτης που θα μαζέψει και τα 15 πούλια κερδίζει!</li>
+                <li><strong>Διπλές:</strong> Όταν φέρεις διπλά, έχεις 4 κινήσεις αντί για 2.</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script src="js/plakoto.js"></script>
+</body>
+</html>
